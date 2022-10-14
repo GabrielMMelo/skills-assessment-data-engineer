@@ -1,6 +1,8 @@
 # Skill Assessment: dbt Data Engineer
 
-Gabriel Marques de Melo
+Applicant: Gabriel Marques de Melo
+
+[Project Description](README.pdf)
 
 ## Project Decisions:
 
