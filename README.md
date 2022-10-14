@@ -1,7 +1,3 @@
----
-Tags: review
----
-
 # Skill Assessment: dbt Data Engineer
 
 Gabriel Marques de Melo
@@ -74,7 +70,7 @@ erDiagram
 - Source data was ingested into dbt as `seeds`, exporting Excel file as .csv and changing delimiter to default comma (I make sure no source file has commas as the content of any column).
 - A view layer was created above the seeds renaming the columns;
 
- I used macros to retrieve the source columns and parse a query to convert it to the standard hardcoded output schema:
+ I used macros to parse a query to convert it to the standard hardcoded output schema:
 ```python
  {% macro format_column(source_column_name, target_column_type, target_column_name) %}
     "{{source_column_name}}"::{{target_column_type}} AS {{ target_column_name }}
@@ -92,6 +88,26 @@ erDiagram
 {% endmacro %}
 ```
 
+So the code for generating each one of the 8 source was pretty much identical, except by the local `source_table` variable definition:
+```sql
+{% set source_table = "AFRICA" %}. -- OR "AMERICA", etc.
+{% set source_columns = adapter.get_columns_in_relation(
+    ref(source_table)
+) %}
+{% set target_schema = load_target_schema()['target_schema'] %}
+-- If I needed to make any schema handling for a specify region, I could do here, changing target_schema
+
+SELECT 
+{% for col in source_columns %}
+    {{ format_column(col.name, target_schema.types[loop.index0], target_schema.names[loop.index0]) }}
+    {% if not loop.last %}
+        ,
+    {% endif %}
+{% endfor %}
+FROM
+  {{ ref(source_table) }}
+  ```
+
 - An additional view was created unioning all views to make the load process for downstream tables easier;
 - Final persisted tables were loaded in a different schema.
 
@@ -104,7 +120,9 @@ erDiagram
 - Group sights by `agency_region` and month
 - Rank the regions with more sights for each month
 - Format the month as a string and show only the regions with the most occurrences each month.
-### Code
+<details>
+  <summary>Code</summary>
+
 ```sql
 WITH sight_with_location AS (
   SELECT *
@@ -139,6 +157,8 @@ WHERE
 ORDER BY
     month
 ```
+</details>
+
 ### Results
 
 | month_name | agency_region_most_likely_to_find |
@@ -165,7 +185,9 @@ ORDER BY
 - Select sights with the appearance of weapon and jacket but not hat, grouping them by month and counting
 - Join the above results and divide the counter of the latter by the former (i.e., to get the %)
 - Format the month as a string
-### Code
+<details>
+  <summary>Code</summary>
+  
 ```sql
 WITH all_sights_by_month AS (
     SELECT
@@ -201,6 +223,8 @@ INNER JOIN
 ORDER BY
     a.month
 ```
+</details>
+
 ### Results
 
 | month_name | perc                    |
@@ -227,7 +251,9 @@ ORDER BY
 ### Steps
 - Group all sights by `behavior`, ordering it by count
 - Limit the results by 3 (i.e., only the top 3, with the biggest count value)
-### Code
+<details>
+  <summary>Code</summary>
+  
 ```sql
 SELECT
     behavior as most_occuring_behaviors
@@ -238,6 +264,7 @@ GROUP BY
 ORDER BY COUNT(*) DESC
 LIMIT 3
 ```
+</details>
 
 ### Results
 
@@ -257,7 +284,9 @@ LIMIT 3
 - Select sights with behaviors in top 3
 - Join the above 2 results and divide the counter of the latter by the former (i.e., to get the %)
 - Format the month as a string
-### Code
+<details>
+  <summary>Code</summary>
+  
 ```sql
 WITH most_occuring_behaviors AS (
     SELECT
@@ -299,6 +328,8 @@ INNER JOIN
 ORDER BY
     a.month
 ```
+</details>
+
 ### Results
 
 | month_name | perc                     |
