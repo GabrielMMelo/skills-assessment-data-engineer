@@ -65,7 +65,7 @@ erDiagram
 
 ### Data Architecture
 
-![[Pasted image 20221014155114.png]]
+![Data Architecture](/docs/data-architecture.png)
 
 - Source data was ingested into dbt as `seeds`, exporting Excel file as .csv and changing delimiter to default comma (I make sure no source file has commas as the content of any column).
 - A view layer was created above the seeds renaming the columns;
